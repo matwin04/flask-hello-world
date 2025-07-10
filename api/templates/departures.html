@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Departures – {{ stop_name }}</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 2rem;
+    }
+    h1 {
+      color: #2c3e50;
+    }
+    .clock {
+      float: right;
+      font-weight: bold;
+      color: #666;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 2rem;
+    }
+    th, td {
+      padding: 0.6rem;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+    th {
+      background-color: #f5f5f5;
+    }
+    .back-link {
+      margin-top: 2rem;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div>
+    <span class="clock" id="clock">--:--:--</span>
+    <h1>🚉 Departures for {{ stop_name }}</h1>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Departure Time</th>
+        <th>Headsign</th>
+        <th>Route</th>
+        <th>Route Name</th>
+        <th>Trip</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for dep in departures %}
+      <tr>
+        <td class="departure-time" data-time="{{ dep.departure.scheduled_local or dep.departure_time }}"></td>
+        <td>{{ dep.stop_headsign or dep.trip.trip_headsign or "N/A" }}</td>
+        <td>{{ dep.trip.route.route_short_name or dep.trip.route.route_id if dep.trip.route else "N/A" }}</td>
+        <td>{{ dep.trip.route.route_long_name if dep.trip.route else "N/A" }}</td>
+        <td>{{ dep.trip.trip_short_name or dep.trip.trip_id or "N/A" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <a href="/" class="back-link">← Back to Dashboard</a>
+
+  <script>
+    function formatTimes() {
+      document.querySelectorAll(".departure-time").forEach(cell => {
+        const rawTime = cell.dataset.time;
+        if (!rawTime) {
+          cell.textContent = "N/A";
+          return;
+        }
+
+        const date = new Date(rawTime);
+        if (isNaN(date)) {
+          cell.textContent = rawTime;
+        } else {
+          const time = date.toLocaleTimeString([], {
+            hour: 'numeric',
+            minute: '2-digit'
+          });
+          cell.textContent = time;
+        }
+      });
+    }
+
+    function updateClock() {
+      const now = new Date();
+      const timeString = now.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+      document.getElementById('clock').textContent = timeString;
+    }
+
+    formatTimes();
+    updateClock();
+    setInterval(updateClock, 1000);
+  </script>
+</body>
+</html>
